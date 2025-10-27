@@ -29,9 +29,9 @@ export const deleteData = (id: number) => {
   return http.request("delete", `/profile-system/${id}`);
 };
 
-export const deleteDataByIds = (ids: number[]) => {
-  return http.request("delete", "/profile-system/by-ids", {
-    data: { ids }
+export const deleteDataByIds = params => {
+  return http.request("post", "/profile-system/handle-closed-files", {
+    data: params
   });
 };
 

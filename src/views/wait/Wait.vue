@@ -37,8 +37,10 @@ onMounted(() => {
   //TODO单独开一个查看的界面
   //按钮跳转操作
   setTimeout(() => {
-    if (route.query.requestId != null) {
-      router.push(`/request/user_request?requestId=${route.query.requestId}`);
+    if (route.query.requestId != null && route.query.route != null) {
+      router.push(
+        `/request/${route.query.route}?requestId=${route.query.requestId}`
+      );
     } else {
       skipVisiable.value = true;
     }

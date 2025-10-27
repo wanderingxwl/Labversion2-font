@@ -184,8 +184,8 @@ const getPageListByparams = async () => {
               { label: "canceled-已取消", value: 1 },
               { label: "Rejected-已拒绝", value: 2 },
               { label: "In Testing-测试中", value: 3 },
-              { label: "First Level Review-一级审核", value: 4 },
-              { label: "Second Level Review-二级审核", value: 5 },
+              { label: "Review-一级审核", value: 4 },
+              { label: "Approval-二级审核", value: 5 },
               { label: "Completed-已完成", value: 6 },
               { label: "Draft-草稿箱", value: 7 }
             ],
@@ -393,8 +393,8 @@ const getPageListByparams = async () => {
               { label: "Canceled-已取消", value: 1 },
               { label: "Rejected-已拒绝", value: 2 },
               { label: "In Testing-测试中", value: 3 },
-              { label: "First Level Review-一级审核", value: 4 },
-              { label: "Second Level Review-二级审核", value: 5 },
+              { label: "Review-一级审核", value: 4 },
+              { label: "Approval-二级审核", value: 5 },
               { label: "Completed-已完成", value: 6 },
               { label: "Draft-草稿箱", value: 7 }
             ],
@@ -622,13 +622,17 @@ const handleSelectLab = () => {
   createModalRef.value.showAddModal(null);
 };
 const handleEdit = (record: Recordable) => {
-  if (record.status == 1 || record.status == 2) {
-    ElMessage.warning(
-      "Modification is not allowed in the current state. 当前状态不允许进行修改"
-    );
-    return;
+  if (record.status != null) {
+    if (record.status == 1 || record.status == 2) {
+      ElMessage.warning(
+        "Modification is not allowed in the current state. 当前状态不允许进行修改"
+      );
+      return;
+    }
+    createModalRef.value.showEditModal(record.id, false);
+  } else {
+    createModalRef.value.showEditModal(record.id, true);
   }
-  createModalRef.value.showEditModal(record);
 };
 const handleDelete = async (record: Recordable) => {
   const type = await VxeUI.modal.confirm(
@@ -708,7 +712,8 @@ const handleReject = async (record: Recordable) => {
   } else return;
 };
 const handleView = (record: Recordable) => {
-  createModalRef.value.showViewModal(record);
+  console.log(record);
+  createModalRef.value.showViewModal(record.id);
 };
 const functions = ref<Record<string, string>>({});
 
@@ -868,8 +873,8 @@ onBeforeMount(() => {
   //             { label: "canceled-已取消", value: 1 },
   //             { label: "Rejected-已拒绝", value: 2 },
   //             { label: "In Testing-测试中", value: 3 },
-  //             { label: "First Level Review-一级审核", value: 4 },
-  //             { label: "Second Level Review-二级审核", value: 5 },
+  //             { label: "Review-一级审核", value: 4 },
+  //             { label: "Approval-二级审核", value: 5 },
   //             { label: "Completed-已完成", value: 6 }
   //           ],
   //           placeholder: "Please select status.请选择申请单状态"
@@ -1076,8 +1081,8 @@ onBeforeMount(() => {
   //             { label: "Canceled-已取消", value: 1 },
   //             { label: "Rejected-拒绝", value: 2 },
   //             { label: "In Testing-测试中", value: 3 },
-  //             { label: "First Level Review-一级审核", value: 4 },
-  //             { label: "Second Level Review-二级审核", value: 5 },
+  //             { label: "Review-一级审核", value: 4 },
+  //             { label: "Approval-二级审核", value: 5 },
   //             { label: "Completed-已完成", value: 6 }
   //           ],
   //           placeholder: "status 请选择申请单状态"
@@ -1130,6 +1135,24 @@ watch(
   () => route.meta.tag,
   async () => {
     await getPageListByparams();
+    if (route.query.requestId != null) {
+      var record: Recordable = {
+        id: route.query.requestId
+      };
+      switch (route.meta.tag) {
+        case "edit":
+          handleEdit(record);
+          break;
+        case "audit_1":
+          handleAudit(record);
+          break;
+        case "audit_2":
+          handleAudit(record);
+          break;
+        default:
+          break;
+      }
+    }
   },
   { immediate: true, deep: true }
 );
@@ -1223,7 +1246,7 @@ const InitColumn = () => {
                       status: "info",
                       size: "mini"
                     },
-                    { default: () => h("span", "First-level review-一级审核") }
+                    { default: () => h("span", "Review-一级审核") }
                   );
                 case 5:
                   return h(
@@ -1232,7 +1255,7 @@ const InitColumn = () => {
                       status: "info",
                       size: "mini"
                     },
-                    { default: () => h("span", "Second-level review-二级审核") }
+                    { default: () => h("span", "Approval-二级审核") }
                   );
                 case 6:
                   return h(
@@ -1373,7 +1396,7 @@ const InitColumn = () => {
                       status: "info",
                       size: "mini"
                     },
-                    { default: () => h("span", "First-level review-一级审核") }
+                    { default: () => h("span", "Review-一级审核") }
                   );
                 case 5:
                   return h(
@@ -1382,7 +1405,7 @@ const InitColumn = () => {
                       status: "info",
                       size: "mini"
                     },
-                    { default: () => h("span", "Second-level review-二级审核") }
+                    { default: () => h("span", "Approval-二级审核") }
                   );
                 case 6:
                   return h(
@@ -1523,7 +1546,7 @@ const InitColumn = () => {
     //                   status: "info",
     //                   size: "mini"
     //                 },
-    //                 { default: () => h("span", "First-level review-一级审核") }
+    //                 { default: () => h("span", "Review-一级审核") }
     //               );
     //             case 5:
     //               return h(
@@ -1532,7 +1555,7 @@ const InitColumn = () => {
     //                   status: "info",
     //                   size: "mini"
     //                 },
-    //                 { default: () => h("span", "Second-level review-二级审核") }
+    //                 { default: () => h("span", "Approval-二级审核") }
     //               );
     //             case 6:
     //               return h(
@@ -1674,7 +1697,7 @@ const InitColumn = () => {
                       status: "info",
                       size: "mini"
                     },
-                    { default: () => h("span", "First-level review-一级审核") }
+                    { default: () => h("span", "Review-一级审核") }
                   );
                 case 5:
                   return h(
@@ -1683,7 +1706,7 @@ const InitColumn = () => {
                       status: "info",
                       size: "mini"
                     },
-                    { default: () => h("span", "Second-level review-二级审核") }
+                    { default: () => h("span", "Approval-二级审核") }
                   );
                 case 6:
                   return h(
@@ -1956,6 +1979,7 @@ const handleReUploadReport = async (record: Recordable) => {
           ref="assignFormRef"
           :data="selectedRowData"
           :category="true"
+          :operator="currentUser.name"
         />
       </template>
     </vxe-modal>

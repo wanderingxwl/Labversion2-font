@@ -21,7 +21,6 @@ export const login = async (data?: object) => {
 };
 /** 获取权限 */
 export const getUserPermissions = async () => {
-  const result = await http.request<string[]>("get", "/auth/functions");
   return http.request<string[]>("get", "/auth/functions");
 };
 /** 获取组织机构 */
@@ -36,7 +35,4 @@ export const editUserInfo = (params: any) => {
   return http.request<UserInfo>("put", "/auth/user-info", {
     data: params
   });
-};
-export const getUnReadNotice = (account: string) => {
-  return http.request("get", `/auth/unread-notice?account=${account}`);
 };

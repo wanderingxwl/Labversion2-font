@@ -62,6 +62,9 @@ export function useNav() {
   const title = computed(() => {
     return $config.Title;
   });
+  const UserInfo = computed(() => {
+    return useUserStoreHook()?.currentUser;
+  });
 
   /** 动态title */
   function changeTitle(meta: routeMetaType) {
@@ -129,6 +132,7 @@ export function useNav() {
   return {
     route,
     title,
+    UserInfo,
     device,
     layout,
     logout,

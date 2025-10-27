@@ -197,7 +197,9 @@ const actionColumns: VxeGridPropTypes.Columns<any> =
                 }
               })
             : null,
-          hasAuth(props.functions["reupload"]) && row.status == 6
+          hasAuth(props.functions["reupload"]) &&
+          row.status > 3 &&
+          row.status < 7
             ? h(VxeButton, {
                 status: "warning",
                 mode: "text",

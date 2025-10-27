@@ -48,6 +48,7 @@ interface formVo {
   requestId: number;
   adminAccount: string;
   testersAccount: string[];
+  operator: string;
 }
 const props = defineProps({
   data: {
@@ -57,6 +58,10 @@ const props = defineProps({
   formType: {
     type: Boolean,
     default: true
+  },
+  operator: {
+    type: String,
+    default: ""
   }
 });
 const adminOptions = ref();
@@ -65,12 +70,14 @@ const InitformData = () => {
   return {
     requestId: null,
     adminAccount: "",
-    testersAccount: []
+    testersAccount: [],
+    Operator: ""
   };
 };
 const formData = ref<formVo>(InitformData());
 const handleSubmit = async () => {
   //分配成员
+  formData.value.operator = props.operator;
   await assignRequest(formData.value);
   // 发送邮件
   // await SendEmail({
@@ -94,6 +101,7 @@ const getOptions = async () => {
 };
 onMounted(async () => {
   await getOptions();
+  console.log(props);
   formData.value.requestId = props.data.id;
 });
 watch(

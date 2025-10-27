@@ -41,6 +41,33 @@ import {
   IconifyIconOnline,
   FontIcon
 } from "./components/ReIcon";
+
+// 引入 Element Plus 图标组件
+import {
+  Loading,
+  DocumentDelete,
+  CircleClose,
+  EditPen,
+  User,
+  CircleCheck,
+  Box,
+  Upload,
+  RefreshLeft
+} from "@element-plus/icons-vue";
+
+// // 使用 Element Plus
+// app.use(ElementPlus);
+
+app.component("Loading", Loading);
+app.component("DocumentDelete", DocumentDelete);
+app.component("CircleClose", CircleClose);
+app.component("EditPen", EditPen);
+app.component("User", User);
+app.component("CircleCheck", CircleCheck);
+app.component("Box", Box);
+app.component("Upload", Upload);
+app.component("RefreshLeft", RefreshLeft);
+
 app.component("IconifyIconOffline", IconifyIconOffline);
 app.component("IconifyIconOnline", IconifyIconOnline);
 app.component("FontIcon", FontIcon);

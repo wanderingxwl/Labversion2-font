@@ -9,6 +9,8 @@ import LaySidebarTopCollapse from "../lay-sidebar/components/SidebarTopCollapse.
 
 import LogoutCircleRLine from "@iconify-icons/ri/logout-circle-r-line";
 import Setting from "@iconify-icons/ri/settings-3-line";
+import UserInfoModal from "../UserInfoModal/UserInfoModal.vue";
+import { ref } from "vue";
 const {
   layout,
   device,
@@ -18,8 +20,10 @@ const {
   username,
   userAvatar,
   avatarsStyle,
-  toggleSideBar
+  toggleSideBar,
+  UserInfo
 } = useNav();
+const UserInfoRef = ref();
 </script>
 
 <template>
@@ -60,6 +64,11 @@ const {
               />
               Log Out
             </el-dropdown-item>
+            <el-dropdown-item class="logout">
+              <el-icon style="margin-left: 5px"><User /></el-icon> User Info{{
+                console.log(UserInfo)
+              }}</el-dropdown-item
+            >
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -72,8 +81,8 @@ const {
       </span>
     </div>
   </div>
+  <UserInfoModal ref="UserInfoRef" :UserInfo="UserInfo" />
 </template>
-
 <style lang="scss" scoped>
 .navbar {
   width: 100%;
@@ -127,7 +136,7 @@ const {
 
   ::v-deep(.el-dropdown-menu__item) {
     display: inline-flex;
-    flex-wrap: wrap;
+    // flex-wrap: wrap;
     min-width: 100%;
   }
 }

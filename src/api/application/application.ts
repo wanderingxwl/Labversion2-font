@@ -66,15 +66,12 @@ export const SendEmail = params => {
     data: params
   });
 };
-export const getNoticeDetail = params => {
-  return http.request(
-    "get",
-    `/request/notice-detail-by-request-id?noticeRecordId=${params.recordId}&requestId=${params.requestId}`
-  );
-};
 export const deleteData = (id: number) => {
   return http.request("delete", `/request/${id}`);
 };
 export const withdrawRequest = id => {
   return http.request("post", `/request/${id}/withdraw-request`);
+};
+export const reuploadReport = params => {
+  return http.request("post", "/request/reupload-report", { data: params });
 };

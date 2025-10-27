@@ -6,29 +6,34 @@
     height="90vh"
     :title="modalOptions.modalTitle"
     @close="handleCloseWindownWithFileClean"
-  >
+    ><template v-if="formData.records">
+      <div
+        style="
+          height: 90%;
+          max-width: 600px;
+          position: absolute;
+          left: 20px;
+          top: 40px;
+        "
+      >
+        <Steps :StepsDetail="formData.records" />
+      </div>
+    </template>
+
     <div
-      style="
-        height: 90%;
-        max-width: 600px;
-        position: absolute;
-        left: 50px;
-        top: 40px;
-      "
-    >
-      <Steps :status="formData.status" :step-key="stepKey" />
-    </div>
-    <div
-      style="
-        background-color: white;
-        margin: 10px;
-        padding: 30px;
-        margin-left: 160px;
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
-        border: 2px solid rgb(199.5, 201, 204);
-      "
+      :style="{
+        backgroundColor: 'white',
+        margin: '10px',
+        padding: '30px',
+        marginLeft:
+          formData.records != null && formData.records.length > 0
+            ? '300px'
+            : '0px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '30px',
+        border: '2px solid rgb(199.5, 201, 204)'
+      }"
     >
       <header>
         <applicationHeader
@@ -39,7 +44,11 @@
       <main>
         <vxe-form
           ref="formRef"
-          :rules="currentFunction == 'edit' ? rules1_edit : rules1_apply"
+          :rules="
+            currentFunction == 'edit' && formData.status != 7
+              ? rules1_edit
+              : rules1_apply
+          "
           class="form"
           title-align="right"
           title-width="190"
@@ -141,7 +150,8 @@
             v-if="
               formData.status != 0 &&
               formData.status != 1 &&
-              formData.status != 2
+              formData.status != 2 &&
+              formData.status != 7
             "
             title="Application No."
             field="applicationNo"
@@ -570,7 +580,7 @@
             span="24"
             :item-render="BackSampleRadioGroup"
           />
-          <vxe-form-item
+          <!-- <vxe-form-item
             title="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Acceptance Criteria 判定标准"
             field="acceptanceCriteria"
             span="24"
@@ -578,10 +588,36 @@
               name: 'VxeTextarea',
               props: {
                 autosize: { minRows: 4, maxRows: 8 },
+                maxlength: 500,
+                showWordCount: true,
                 placeholder: 'Please enter acceptance criteria. 请输入判定标准'
               }
             }"
-          />
+          /> -->
+          <vxe-form-item
+            title="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Acceptance Criteria 判定标准"
+            field="acceptanceCriteria"
+            span="24"
+            :item-render="{
+              // name: 'VxeTextarea',
+              // props: {
+              //   autosize: { minRows: 4, maxRows: 8 },
+              //   maxlength: 500,
+              //   showWordCount: true,
+              //   placeholder: 'Please enter acceptance criteria. 请输入判定标准'
+              // }
+            }"
+          >
+            <template #default>
+              <vxe-textarea
+                v-model="formData.acceptanceCriteria"
+                placeholder="Please enter acceptance criteria. 请输入判定标准"
+                max-length="500"
+                show-word-count
+                :autosize="{ minRows: 4, maxRows: 8 }"
+              /> </template
+          ></vxe-form-item>
+
           <vxe-form-item
             title="Report Form 报告类型"
             field="reportFormType"
@@ -741,7 +777,12 @@
                 content="Save 保存"
                 @click="handleSubmit(true)"
               />
-              <template v-if="currentFunction == 'audit'">
+              <template
+                v-if="
+                  currentFunction == 'audit' &&
+                  (formData.status == 5 || formData.status == 4)
+                "
+              >
                 <el-button type="success" @click="handleAudit()">
                   Pass 通过
                 </el-button>
@@ -836,7 +877,6 @@
     </template>
   </el-dialog>
   <Preview ref="previewRef" />
-  <!-- <StampModal ref="stampPdfRef" @handle-completed="handleCompleted" /> -->
 </template>
 <script setup lang="ts">
 import {
@@ -855,14 +895,13 @@ import {
   auditRequest,
   ExportWord,
   getSingle,
-  // SendEmail,
   getUserOptionsByRoleId,
-  submitData
+  submitData,
+  reuploadReport
 } from "@/api/application/application";
 import Preview from "@/components/Preview/Preview.vue";
 import applicationHeader from "./applicationHeader.vue";
 import applicationFooter from "./applicationFooter.vue";
-// import StampModal from "./StampModal.vue";
 import { GetNowDate } from "@/utils/time";
 import { getWorkCellOption } from "@/api/system/organization";
 import { getTestItemOptions } from "@/api/configuration/testItem";
@@ -871,13 +910,21 @@ import {
   addFileList,
   deleteData,
   deleteDataByIds,
-  download,
-  stampPdf
+  download
 } from "@/api/system/profileSystem";
 import Steps from "./Steps.vue";
 import { ElMessage, ElInput } from "element-plus";
 import { useUserStoreHook } from "@/store/modules/user";
 import { useRoute } from "vue-router";
+import {
+  rule2testItem,
+  rules1_apply,
+  rules1_edit,
+  rules2_apply_FA,
+  rules2_apply_Rel,
+  rules2_edit
+} from "./static/rules.js";
+
 const route = useRoute();
 const props = defineProps({
   userInfo: {
@@ -930,250 +977,10 @@ const formData = ref<FormDataVO>({
   reportFileList: [],
   reportFileIds: [],
   status: 0,
-  cost: 0
+  cost: 0,
+  records: []
 });
 
-const rule2testItem = {
-  id: [
-    {
-      required: true,
-      message: "Please select test item. 请选择测试项",
-      trigger: "change"
-    }
-  ],
-  usage: [
-    {
-      required: true,
-      message: "Please enter Qty. 请输入数量",
-      trigger: "blur"
-    }
-  ],
-  desc: [
-    {
-      required: true
-    }
-  ]
-};
-const rules1_apply = {
-  costCenter: [
-    {
-      required: true,
-      message: "Cost center can't be empty",
-      trigger: "blur"
-    }
-  ],
-  ccOwner: [
-    {
-      required: true,
-      message: "CC owner can't be empty",
-      trigger: "blur"
-    }
-  ],
-  tel: [
-    {
-      required: true,
-      message: "Call No. can't be empty",
-      trigger: "blur"
-    }
-  ]
-};
-const rules1_edit = {
-  applicationNo: [
-    {
-      required: true,
-      message: "Application No. can't be empty",
-      trigger: "blur"
-    }
-  ],
-  costCenter: [
-    {
-      required: true,
-      message: "Cost center can't be empty",
-      trigger: "blur"
-    }
-  ],
-  ccOwner: [
-    {
-      required: true,
-      message: "CC owner can't be empty",
-      trigger: "blur"
-    }
-  ],
-  tel: [
-    {
-      required: true,
-      message: "Call No. can't be empty",
-      trigger: "blur"
-    }
-  ]
-};
-const rules2_apply_Rel = {
-  projectName: [
-    {
-      required: true,
-      message: "Project name-项目名不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleType: [
-    {
-      required: true,
-      message: "Sample type-样品类型不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleModel: [
-    {
-      required: true,
-      message: "Sample model-样品型号不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleQuantity: [
-    {
-      required: true,
-      message: "Sample Quantity-样品数量不可为空",
-      trigger: "blur"
-    }
-  ],
-  buildPhase: [
-    {
-      required: true,
-      message: "Build phase-制造阶段不可为空",
-      trigger: "blur"
-    }
-  ],
-  testStandard: [
-    {
-      required: true,
-      message: "Test standard-测试标准不可为空",
-      trigger: "blur"
-    }
-  ],
-  acceptanceCriteria: [
-    {
-      required: true,
-      message: "Acceptance criteria can't be empty",
-      trigger: "blur"
-    }
-  ]
-};
-const rules2_apply_FA = {
-  projectName: [
-    {
-      required: true,
-      message: "Project name-项目名不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleType: [
-    {
-      required: true,
-      message: "Sample type-样品类型不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleModel: [
-    {
-      required: true,
-      message: "Sample model-样品型号不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleQuantity: [
-    {
-      required: true,
-      message: "Sample Quantity-样品数量不可为空",
-      trigger: "blur"
-    }
-  ],
-  buildPhase: [
-    {
-      required: true,
-      message: "Build phase-制造阶段不可为空",
-      trigger: "blur"
-    }
-  ]
-};
-const rules2_edit = {
-  projectName: [
-    {
-      required: true,
-      message: "Project name-项目名称不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleType: [
-    {
-      required: true,
-      message: "Sample type-样品类型不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleModel: [
-    {
-      required: true,
-      message: "Sample model-样品型号不可为空",
-      trigger: "blur"
-    }
-  ],
-  sampleQuantity: [
-    {
-      required: true,
-      message: "Sample Quantity-样品数量不可为空",
-      trigger: "blur"
-    }
-  ],
-  buildPhase: [
-    {
-      required: true,
-      message: "Build phase-制造阶段不可为空",
-      trigger: "blur"
-    }
-  ],
-  testStandard: [
-    {
-      required: true,
-      message: "Test standard-测试标准不可为空",
-      trigger: "blur"
-    }
-  ],
-  acceptanceCriteria: [
-    {
-      required: true,
-      message: "Acceptance criteria can't be empty",
-      trigger: "blur"
-    }
-  ]
-  // confirmingPerson: [
-  //   {
-  //     required: true,
-  //     message: "Confirmed by Laboratory can't be empty",
-  //     blur: "change"
-  //   }
-  // ],
-  // sampleReceivedTime: [
-  //   {
-  //     required: true,
-  //     message: "Sample received time can't be empty",
-  //     blur: "change"
-  //   }
-  // ],
-  // completionTime: [
-  //   {
-  //     required: true,
-  //     message: "Estimated completion time can't be empty",
-  //     blur: "change"
-  //   }
-  // ],
-  // remark: [
-  //   {
-  //     required: true,
-  //     message: "Remark can't be empty",
-  //     blur: "cahnge"
-  //   }
-  // ]
-};
 const emits = defineEmits<{
   (e: "reload"): void;
 }>();
@@ -1372,21 +1179,31 @@ const handleTestItemAdd = async () => {
   testItemAddVisiable.value = false;
   nextTick(() => testItemRef.value.clearValidate());
 };
-const stepKey = ref(1);
 const modalOptions = reactive<{
   modalValue: boolean;
   modalTitle: string;
   canSubmit: boolean;
+  showModalFlag: boolean;
 }>({
   modalValue: false,
   modalTitle: "",
-  canSubmit: true
+  canSubmit: true,
+  showModalFlag: false
 });
 
 const showModal = (title?: string, canSubmit?: boolean): void => {
+  updatedFileIds.value = [];
+  deletedFileId.value = [];
   modalOptions.modalTitle = title;
   modalOptions.modalValue = true;
   modalOptions.canSubmit = canSubmit ?? true;
+  modalOptions.showModalFlag = true;
+};
+const closeModal = () => {
+  emits("reload");
+  modalOptions.modalValue = false;
+  modalOptions.showModalFlag = false;
+  currentFunction.value = "";
 };
 const currentFunction = ref();
 const InitApplyInfo = () => {
@@ -1410,27 +1227,15 @@ const InitApplyInfo = () => {
 };
 const showAddModal = async record => {
   currentFunction.value = "add";
-  updatedFileIds.value = [];
+  // updatedFileIds.value = [];
   if (record == null) {
     labCategory.value = props.applicationType;
-    // formData.value.backgroundDesc = "";
-    // formData.value.testConditionDesc = "";
     formData.value = await InitformData();
   } else {
     formData.value = await getSingle(record.id);
     InitApplyInfo();
-    // if (
-    //   formData.value.testItemDesc != null &&
-    //   formData.value.testItemDesc != ""
-    // ) {
-    //   testItemTable.value.push({ id: 1, itemDesc: "Other-其他", cost: 0 });
-    // }
-    //TODO
-    // testItemOptions.value = await getTestItemOptions({
-    //   labCategory: labCategory.value
-    // });
   }
-  stepKey.value = 1;
+
   testItemOptions.value = await getTestItemOptions({
     labCategory: labCategory.value
   });
@@ -1441,32 +1246,11 @@ const showAddModal = async record => {
     formRef2.value.clearValidate();
   });
 };
-const showViewModal = async data => {
+const showViewModal = async requestId => {
   currentFunction.value = "view";
-  formData.value = await getSingle(data.id);
+  formData.value = await getSingle(requestId);
   testItemTable.value = formData.value.testItemList;
-  // if (
-  //   formData.value.testItemDesc != null &&
-  //   formData.value.testItemDesc != ""
-  // ) {
-  //   testItemTable.value.push({ id: 1, itemDesc: "Other-其他", cost: 0 });
-  // }
-  switch (formData.value.status) {
-    case 0:
-      stepKey.value = 2;
-      break;
-    case 1:
-      stepKey.value = 4;
-      break;
-    case 2:
-      stepKey.value = 4;
-      break;
-    case 7:
-      stepKey.value = 1;
-      break;
-    default:
-      stepKey.value = formData.value.status;
-  }
+
   labCategory.value = formData.value.labCategory;
   LaboratorOptions.value = await getUserOptionsByRoleId({
     // roleName: "Project Leader",
@@ -1480,20 +1264,18 @@ const showViewModal = async data => {
   );
   showModal();
 };
-const showEditModal = async data => {
+const showEditModal = async (requestId, isLink) => {
+  console.log(requestId);
+  formData.value = await getSingle(requestId);
+  if (isLink) {
+    if (formData.value.status != 3) {
+      showViewModal(requestId);
+      return;
+    }
+  }
   currentFunction.value = "edit";
-  deletedFileId.value = [];
-  updatedFileIds.value = [];
-  formData.value = await getSingle(data.id);
   labCategory.value = formData.value.labCategory;
   testItemTable.value = formData.value.testItemList;
-  // if (
-  //   formData.value.testItemDesc != null &&
-  //   formData.value.testItemDesc != ""
-  // ) {
-  //   testItemTable.value.push({ id: 1, itemDesc: "Other-其他", cost: 0 });
-  // }
-  //TODO
   testItemOptions.value = await getTestItemOptions({
     labCategory: labCategory.value
   });
@@ -1506,11 +1288,6 @@ const showEditModal = async data => {
   formData.value.testStandard = formData.value.testStandard.concat(
     formData.value.testStandardOther
   );
-  if (formData.value.status == 7) {
-    stepKey.value = 1;
-  } else {
-    stepKey.value = formData.value.status;
-  }
 
   showModal();
   nextTick(() => {
@@ -1522,12 +1299,6 @@ const showAuditModal = async data => {
   currentFunction.value = "audit";
   formData.value = await getSingle(data.id);
   testItemTable.value = formData.value.testItemList;
-  // if (
-  //   formData.value.testItemDesc != null &&
-  //   formData.value.testItemDesc != ""
-  // ) {
-  //   testItemTable.value.push({ id: 1, itemDesc: "Other-其他", cost: 0 });
-  // }
   labCategory.value = formData.value.labCategory;
   LaboratorOptions.value = await getUserOptionsByRoleId({
     // roleName: "Project Leader",
@@ -1538,49 +1309,29 @@ const showAuditModal = async data => {
   formData.value.testStandard = formData.value.testStandard.concat(
     formData.value.testStandardOther
   );
-  // if (formData.value.status == 7) {
-  //   stepKey.value == 2;
-  // } else
-  stepKey.value = formData.value.status;
   showModal();
 };
 const handleAudit = async () => {
-  // if (formData.value.status == 5) {
-  //   if (
-  //     formData.value.reportFormType != 4 &&
-  //     formData.value.reportFormType != 3
-  //   ) {
-  //     await stampPdf({ flag: 1, requestId: formData.value.id });
-  //   }
-  //   // handleCompleted(1);
-  //   // stampPdfRef.value.showDialog();
-  // }
-  var result = await auditRequest({
+  await auditRequest({
     requestId: formData.value.id,
     operator: useUserStoreHook().currentUser?.name
   });
-  if (result) {
-    if (formData.value.status == 5) {
-      if (
-        formData.value.reportFormType != 4 &&
-        formData.value.reportFormType != 3
-      ) {
-        await stampPdf({ flag: 1, requestId: formData.value.id });
-      }
-      // handleCompleted(1);
-      // stampPdfRef.value.showDialog();
-    }
-  }
-  emits("reload");
-  modalOptions.modalValue = false;
-  currentFunction.value = "";
+  // if (result) {
+  //   if (formData.value.status == 5) {
+  //     if (
+  //       formData.value.reportFormType != 4 &&
+  //       formData.value.reportFormType != 3
+  //     ) {
+  //       await stampPdf({ flag: 1, requestId: formData.value.id });
+  //     }
+  //   }
+  // }
+  // emits("reload");
+  // modalOptions.modalValue = false;
+  // currentFunction.value = "";
+  closeModal();
 };
-// const remarkVisiable = ref(false);
-// const remark = ref("");
-// const showRemarkModal = () => {
-//   remark.value = "";
-//   remarkVisiable.value = true;
-// };
+
 const rejectReason = ref();
 const handleRejectAudit = async () => {
   rejectReason.value = "";
@@ -1616,14 +1367,15 @@ const handleRejectAudit = async () => {
       rejectReason: rejectReason.value,
       operator: useUserStoreHook()?.currentUser?.name
     });
-    emits("reload");
-    modalOptions.modalValue = false;
-    currentFunction.value = "";
+    // emits("reload");
+    // modalOptions.modalValue = false;
+    // currentFunction.value = "";
+    closeModal();
   }
 };
 const showReuploadModal = async (record: Recordable) => {
   currentFunction.value = "reupload";
-  updatedFileIds.value = [];
+  // updatedFileIds.value = [];
   formData.value = await getSingle(record.id);
   // 初始化 selectedObjects
   labCategory.value = formData.value.labCategory;
@@ -1640,22 +1392,14 @@ const showReuploadModal = async (record: Recordable) => {
   formData.value.testStandard = formData.value.testStandard.concat(
     formData.value.testStandardOther
   );
-  stepKey.value = formData.value.status;
+
   showModal();
   nextTick(() => {
     formRef.value.clearValidate();
     formRef2.value.clearValidate();
   });
 };
-// let visibleCost = ref(false);
-// const showCost = () => {
-//   if (
-//     props.userInfo.department == "Design Services Group" ||
-//     props.userInfo.department == "PurestAdmin"
-//   ) {
-//     visibleCost.value = true;
-//   }
-// };
+
 const formRef = ref<VxeFormInstance>();
 const formRef2 = ref<VxeFormInstance>();
 interface Option {
@@ -1702,6 +1446,7 @@ interface FormDataVO {
   labCategory: number;
   status: number;
   cost: number;
+  records: [];
 }
 const WCOptions = ref();
 // const WCItemRender = reactive<VxeFormItemPropTypes.ItemRender>({
@@ -1749,9 +1494,14 @@ const ReportTypeRadioGroup = reactive<VxeFormItemPropTypes.ItemRender>({
 });
 const updatedFileIds = ref([]);
 const handleCloseWindownWithFileClean = async () => {
-  if ((updatedFileIds.value = null && updatedFileIds.value.length > 0)) {
-    await deleteDataByIds(updatedFileIds.value);
+  if (
+    updatedFileIds.value != null &&
+    updatedFileIds.value.length > 0 &&
+    modalOptions.showModalFlag
+  ) {
+    await deleteDataByIds({ id: formData.value.id, Ids: updatedFileIds.value });
   }
+  modalOptions.showModalFlag = modalOptions.modalValue;
 };
 const handleFile = CombineFlag => {
   if (
@@ -1792,7 +1542,25 @@ const handleFile = CombineFlag => {
 };
 const handleSubmit = async (save: boolean) => {
   try {
+    if (currentFunction.value == "reupload") {
+      //获取文件id
+      var reportListIds = formData.value.reportFileList.map(item => item.id);
+      //上传新报告
+      await reuploadReport({
+        deletedFileId,
+        requestId: formData.value.id,
+        reportListIds
+      });
+      // emits("reload");
+      // modalOptions.modalValue = false;
+      // currentFunction.value = "";
+      // deletedFileId.value = [];
+      closeModal();
+      return;
+    }
+    //处理上传文件
     handleFile(false);
+    //分割其他测试项
     formData.value.testStandardOther = [];
     formData.value.testItemList = testItemTable.value;
     if (formData.value.testStandard.length > 0) {
@@ -1811,6 +1579,7 @@ const handleSubmit = async (save: boolean) => {
     //   formData.value.testItemList = testItemTable.value;
     //   // formData.value.testItemDesc = "";
     // }
+    //上传or保存（区别是否改变状态）
     if (save) {
       // if (formData.value.reportFormType == 4) {
       //   //删除report
@@ -1820,29 +1589,25 @@ const handleSubmit = async (save: boolean) => {
       //   formData.value.reportFileList = [];
       //   formData.value.reportFileIds = [];
       // }
+      //save 不改变状态
       await submitData({
         ...formData.value,
         save: save,
         deletedFileIds: deletedFileId.value,
         operator: useUserStoreHook()?.currentUser?.name
       });
-      emits("reload");
-      modalOptions.modalValue = false;
-      currentFunction.value = "";
+      // emits("reload");
+      // modalOptions.modalValue = false;
+      // currentFunction.value = "";
+      closeModal();
     } else {
+      //递进下一个
+      //通过currentFunction来判断改变的状态是什么
+      //判定是否符合表单rules
       await formRef.value.validate(async valid => {
         if (valid == null) {
           formRef2.value.validate(async valid2 => {
             if (valid2 == null) {
-              // handleFile(false);
-              // if (testItemTable.value.some(item => item.id == 1)) {
-              //   formData.value.testItemList = testItemTable.value.filter(
-              //     item => item.id != 1
-              //   );
-              // } else {
-              //   formData.value.testItemList = testItemTable.value;
-              //   formData.value.testItemDesc = "";
-              // }
               if (
                 formData.value.testItemList == null ||
                 formData.value.testItemList.length == 0
@@ -1852,17 +1617,15 @@ const handleSubmit = async (save: boolean) => {
                 );
                 return;
               }
-              // if (!formData.value.testItemList.includes(1)) {
-              //   formData.value.testItemDesc = "";
-              // }
-              // await submitData(formData.value);
               switch (formData.value.status) {
+                //生成
                 case 0:
                   await submitData(formData.value);
                   break;
                 // case 1:
                 //   await submitData(formData.value);
                 //   break;
+                //edit reupload submit not for save
                 default:
                   // if (formData.value.reportFormType != 4) {
                   if (
@@ -1890,9 +1653,10 @@ const handleSubmit = async (save: boolean) => {
                   });
                   break;
               }
-              emits("reload");
-              modalOptions.modalValue = false;
-              currentFunction.value = "";
+              // emits("reload");
+              // modalOptions.modalValue = false;
+              // currentFunction.value = "";
+              closeModal();
             } else {
               let errorMessage = "";
               for (const field in valid) {
@@ -1941,76 +1705,6 @@ const downloadMethod: VxeUploadPropTypes.DownloadMethod = async ({
     });
   }
 };
-// 0: background
-// 1: testCondition
-// 2:report
-
-// const uploadFile = async (fileInfo, chunkIndex = 0) => {
-//     const { file, totalSize, fileName, fileMd5, fileId, filePid } = fileInfo;
-//     const chunks = Math.ceil(totalSize / chunkSize);
-
-//     for (let i = chunkIndex; i < chunks; i++) {
-//         const start = i * chunkSize;
-//         const end = Math.min(start + chunkSize, totalSize);
-//         const chunkFile = file.slice(start, end);
-
-//         try {
-//             const uploadResult = await proxy.Request({
-//                 url: api.upload,
-//                 showLoading: false,
-//                 dataType: 'file',
-//                 params: {
-//                     file: chunkFile,
-//                     fileName,
-//                     fileMd5,
-//                     chunkIndex: i,
-//                     chunks,
-//                     fileId,
-//                     filePid,
-//                 },
-//                 showError: false,
-//                 uploadProgressCallback: (event) => {
-//                     const loaded = Math.min(event.loaded, totalSize);
-//                     const uploadSize = i * chunkSize + loaded;
-//                     const uploadProgress = Math.floor((uploadSize / totalSize) * 100);
-//                     console.log(`上传进度：${uploadProgress}%`);
-//                 },
-//             });
-
-//             if (!uploadResult) {
-//                 console.warn(`Chunk ${i} 上传失败，终止上传`);
-//                 break;
-//             }
-
-//             // 上传完成
-//             if (uploadResult.data.status === STATUS.upload_finish.value) {
-//                 console.log(`文件上传完成`);
-//                 emit('uploadCallback');
-//                 break;
-//          }
-//         } catch (error) {
-//             console.error(`Chunk ${i} 上传异常:`, error);
-//             break;
-//         }
-//     }
-// };
-//生成BlockId的方法
-// const GetBlockId = chunkIndex => {
-//   const blockIdRaw = `block-${chunkIndex.toString().padStart(6, "0")}`;
-//   const blockIdBase64 = btoa(blockIdRaw); // Base64 编码
-//   return blockIdBase64;
-// };
-
-function splitFilename(filename) {
-  const parts = filename.split(".");
-  if (parts.length === 1) {
-    return { name: filename, extensions: [] };
-  }
-
-  const name = parts[0];
-  const extensions = parts.slice(1);
-  return { name, extensions };
-}
 
 const UploadMethod: VxeUploadPropTypes.UploadMethod = async ({
   $upload,
@@ -2018,35 +1712,6 @@ const UploadMethod: VxeUploadPropTypes.UploadMethod = async ({
   option
 }) => {
   try {
-    // 判断文件大小，超过25mb时使用分片传输
-    // if (option.size > 26214400) {
-    //   //分片传输
-    //   const blockIdList = [];
-    //   //chunkSize==2MB
-    //   const chunkSize = 2097152;
-    //   const chunks = Math.ceil(option.size / chunkSize);
-    //   for (let i = 0; i < chunks; i++) {
-    //     //分片请求
-    //     const start = i * chunkSize;
-    //     const end = Math.min(start + chunkSize, option.size);
-    //     const chunkFile = file.slice(start, end);
-    //     //获取BlockId
-    //     blockIdList.push(GetBlockId(i));
-    //     //request
-    //     // const uploadResult = "";
-    //     // if (!uploadResult) {
-    //     //   //文件上传失败，重传警告，并处理相关chunkFile
-    //     // }
-    //   }
-    //   // 合并处理
-    // } else {
-    if (
-      $upload.props.tipText == "report" &&
-      currentFunction.value == "reupload"
-    ) {
-      var { name, extensions } = splitFilename(option.name);
-      option.name = `${name}-B.${extensions}`;
-    }
     const formFileData = new FormData();
     formFileData.append("files", file);
     //添加文件至服务器请求
@@ -2233,6 +1898,8 @@ const handleUsageChange = row => {
 };
 const handleExport = async () => {
   await ExportWord(formData.value.id);
+  // modalOptions.modalValue = false;
+  // closeModal();
 };
 </script>
 <style lang="scss" scoped></style>

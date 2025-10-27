@@ -189,7 +189,10 @@ const LayHeader = defineComponent({
         <LayContent :fixed-header="set.fixedHeader" />
       </div>
       <el-scrollbar v-else>
-        <el-backtop title="To Top" target=".main-container .el-scrollbar__wrap">
+        <!-- <el-backtop title="To Top" target=".main-container .el-scrollbar__wrap">
+          <BackTopIcon />
+        </el-backtop> -->
+        <el-backtop title="To Top">
           <BackTopIcon />
         </el-backtop>
         <LayHeader />
