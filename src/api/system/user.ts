@@ -46,12 +46,18 @@ export const stop = (id: number) => {
 export const normal = (id: number) => {
   return http.request("post", `/user/${id}/normal`);
 };
-export const getTesterOptions = labCategory => {
+export const getTesterOptions = (labCategory: number) => {
   if (labCategory == null) {
     labCategory = 0;
   }
   return http.request(
     "get",
     `/user/tester-options-by-type?LabCategory=${labCategory}`
+  );
+};
+export const EditEmailNotification = (IsSendEmail: number) => {
+  return http.request(
+    "put",
+    `/auth/user-info-with-is-send-email?Send=${IsSendEmail}`
   );
 };

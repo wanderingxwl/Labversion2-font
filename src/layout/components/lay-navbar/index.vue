@@ -24,6 +24,9 @@ const {
   UserInfo
 } = useNav();
 const UserInfoRef = ref();
+const showUserInfoModal = async () => {
+  await UserInfoRef.value.showUserInfoModal();
+};
 </script>
 
 <template>
@@ -64,10 +67,9 @@ const UserInfoRef = ref();
               />
               Log Out
             </el-dropdown-item>
-            <el-dropdown-item class="logout">
-              <el-icon style="margin-left: 5px"><User /></el-icon> User Info{{
-                console.log(UserInfo)
-              }}</el-dropdown-item
+            <el-dropdown-item class="logout" @click="showUserInfoModal">
+              <el-icon style="margin-left: 5px"><User /></el-icon> User
+              Info</el-dropdown-item
             >
           </el-dropdown-menu>
         </template>

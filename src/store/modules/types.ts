@@ -35,13 +35,11 @@ export type setType = {
   fixedHeader: boolean;
   hiddenSideBar: boolean;
 };
-
+//UserInfoType
 export type UserInfoType = {
   name?: string;
   account?: string;
   dept?: string;
   telephone?: string;
-  email?: string;
-  labCategory?: number;
   permissions?: string[];
 };

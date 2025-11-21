@@ -322,7 +322,8 @@ const getPageListByparams = async () => {
               { label: "Failure Analysis-失效分析", value: 2 }
             ],
             placeholder: "Please select lab category.请选择实验室类型",
-            readonly: currentUser.value.labCategory != 0
+            readonly:
+              currentUser.value.labCategory != 0 && route.meta.tag != "audit_1"
           }
         }
       },
@@ -511,29 +512,15 @@ const getPageListByparams = async () => {
       };
       break;
     case "audit_1":
-      formItems.value.map(item => {
-        if (item.field == "labCategory") {
-          switch (currentUser.value.labCategory) {
-            case 0:
-              item.itemRender.props.options = [
-                { label: "All-所有", value: 0 },
-                { label: "Reliability Test-可靠性测试", value: 1 },
-                { label: "Failure Analysis-失效分析", value: 2 }
-              ];
-              break;
-            case 1:
-              item.itemRender.props.options = [
-                { label: "Reliability Test-可靠性测试", value: 1 }
-              ];
-              break;
-            case 2:
-              item.itemRender.props.options = [
-                { label: "Failure Analysis-失效分析", value: 2 }
-              ];
-              break;
-          }
-        }
-      });
+      // formItems.value.map(item => {
+      //   if (item.field == "labCategory") {
+      //     item.itemRender.props.options = [
+      //       { label: "All-所有", value: 0 },
+      //       { label: "Reliability Test-可靠性测试", value: 1 },
+      //       { label: "Failure Analysis-失效分析", value: 2 }
+      //     ];
+      //   }
+      // });
       formData.value = {
         // labCategory: currentUser.value.labCategory,
         // primaryAuditorAccount: currentUser.value.account,
@@ -541,16 +528,49 @@ const getPageListByparams = async () => {
       };
       break;
     case "audit_2":
-      formData.value = {
-        status: 5
-        // labCategory: currentUser.value.labCategory,
-        // secondaryAuditorAccount: currentUser.value.account
-      };
+      formItems.value.map(item => {
+        if (item.field == "labCategory") {
+          switch (currentUser.value.labCategory) {
+            case 0:
+              formData.value = {
+                status: 5
+                // labCategory: currentUser.value.labCategory,
+                // secondaryAuditorAccount: currentUser.value.account
+              };
+              item.itemRender.props.options = [
+                { label: "All-所有", value: 0 },
+                { label: "Reliability Test-可靠性测试", value: 1 },
+                { label: "Failure Analysis-失效分析", value: 2 }
+              ];
+              break;
+            case 1:
+              formData.value = {
+                status: 5,
+                labCategory: currentUser.value.labCategory
+                // secondaryAuditorAccount: currentUser.value.account
+              };
+              item.itemRender.props.options = [
+                { label: "Reliability Test-可靠性测试", value: 1 }
+              ];
+              break;
+            case 2:
+              formData.value = {
+                status: 5,
+                labCategory: currentUser.value.labCategory
+                // secondaryAuditorAccount: currentUser.value.account
+              };
+              item.itemRender.props.options = [
+                { label: "Failure Analysis-失效分析", value: 2 }
+              ];
+              break;
+          }
+        }
+      });
+
       break;
     case "stamp":
       formItems.value.map(item => {
         if (item.field == "status") {
-          console.log(item.itemRender.props.options);
           item.itemRender.props.options = [
             { label: "Completed-已完成", value: 6 }
           ];
@@ -712,7 +732,6 @@ const handleReject = async (record: Recordable) => {
   } else return;
 };
 const handleView = (record: Recordable) => {
-  console.log(record);
   createModalRef.value.showViewModal(record.id);
 };
 const functions = ref<Record<string, string>>({});
@@ -1918,6 +1937,7 @@ const handleReUploadReport = async (record: Recordable) => {
       <ReVxeGrid
         ref="reVxeGridRef"
         :request="getPageList"
+        :route="route.meta.tag"
         :functions="functions"
         :searchParams="formData"
         :columns="columns"

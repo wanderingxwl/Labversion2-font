@@ -18,6 +18,11 @@ const columns = [
     minWidth: 100
   },
   {
+    title: "Tray Capacity 每盘容量",
+    field: "limit",
+    minWidth: 100
+  },
+  {
     title: "Lab Cost 价格",
     field: "cost_per",
     minWidth: 100

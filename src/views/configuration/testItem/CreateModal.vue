@@ -25,6 +25,7 @@ interface AddTestItemInput {
   unit: string;
   cost_per: number | null;
   labCategory: number | null;
+  limit: number | null;
 }
 const formRef = ref();
 const defaultFormData = () => {
@@ -32,7 +33,8 @@ const defaultFormData = () => {
     itemDesc: "",
     unit: "",
     cost_per: null,
-    labCategory: 1
+    labCategory: 1,
+    limit: 1
   };
 };
 const formData = ref<AddTestItemInput>(defaultFormData());
@@ -53,6 +55,15 @@ const formItems = ref<VxeFormPropTypes.Items>([
     itemRender: {
       name: "$input",
       props: { placeholder: "Please enter unit.请输入单位" }
+    }
+  },
+  {
+    title: "Tray Capacity 每盘容量",
+    field: "limit",
+    span: 24,
+    itemRender: {
+      name: "$input",
+      props: { placeholder: "Please enter tray capacity" }
     }
   },
   {

@@ -101,7 +101,6 @@ const getOptions = async () => {
 };
 onMounted(async () => {
   await getOptions();
-  console.log(props);
   formData.value.requestId = props.data.id;
 });
 watch(
@@ -110,7 +109,6 @@ watch(
     if (props.data.id != null) {
       await getOptions();
     }
-    console.log(props.data.id);
   },
   { immediate: true, deep: true }
 );

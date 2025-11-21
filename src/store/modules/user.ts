@@ -29,7 +29,6 @@ export const useUserStore = defineStore({
   },
   actions: {
     setToken(accessToken: string) {
-      console.log(accessToken);
       this.accessToken = accessToken;
       storageSession().setItem(ACCESS_TOKEN, accessToken);
     },

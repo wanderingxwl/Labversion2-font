@@ -17,6 +17,7 @@ const props = withDefaults(
     functions?: Record<string, string>;
     treeConfig?: any;
     isLoad: boolean;
+    route?: any;
   }>(),
   {
     isLoad: true, // Setting the default value for Isload
@@ -92,7 +93,10 @@ const actionColumns: VxeGridPropTypes.Columns<any> =
             : null,
           hasAuth(props.functions["audit"]) &&
           row.status == 4 &&
-          useUserStoreHook().currentUser.permissions.includes("request.audit_1")
+          useUserStoreHook().currentUser.permissions.includes(
+            "request.audit_1"
+          ) &&
+          props.route == "audit_1"
             ? h(VxeButton, {
                 status: "danger",
                 mode: "text",
@@ -105,7 +109,10 @@ const actionColumns: VxeGridPropTypes.Columns<any> =
             : null,
           hasAuth(props.functions["audit"]) &&
           row.status == 5 &&
-          useUserStoreHook().currentUser.permissions.includes("request.audit_2")
+          useUserStoreHook().currentUser.permissions.includes(
+            "request.audit_2"
+          ) &&
+          props.route == "audit_2"
             ? h(VxeButton, {
                 status: "danger",
                 mode: "text",

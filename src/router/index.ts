@@ -184,7 +184,6 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
   } else {
     if (to.path !== "/login") {
       if (whiteList.indexOf(to.path) !== -1) {
-        console.log(to.path);
         next();
       } else {
         next({ path: "/login" });

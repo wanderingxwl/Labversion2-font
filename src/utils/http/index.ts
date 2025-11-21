@@ -126,7 +126,6 @@ class PureHttp {
         const $error = error;
         const { response } = error;
         const data = response.data as any;
-        console.log(response);
         switch (response.status) {
           case HttpStatusCode.Unauthorized:
             ElMessage({

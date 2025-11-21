@@ -1265,7 +1265,6 @@ const showViewModal = async requestId => {
   showModal();
 };
 const showEditModal = async (requestId, isLink) => {
-  console.log(requestId);
   formData.value = await getSingle(requestId);
   if (isLink) {
     if (formData.value.status != 3) {

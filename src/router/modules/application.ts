@@ -58,7 +58,7 @@ export default {
       path: "/request/audit_1",
       name: "request_audit_1",
       meta: {
-        title: "Workspace\r\n工作空间",
+        title: "Reviewer\r\n审核",
         permissions: ["request.audit_1"],
         tag: "audit_1"
       },
@@ -68,7 +68,7 @@ export default {
       path: "/request/audit_2",
       name: "request_audit_2",
       meta: {
-        title: "Workspace\r\n工作空间",
+        title: "Approval\r\n审核",
         permissions: ["request.audit_2"],
         tag: "audit_2"
       },
